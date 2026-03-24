@@ -1,6 +1,8 @@
 name: Gmail Digest
 
 on:
+  push:
+    branches: main
   workflow_dispatch:
   schedule:
     - cron: '17 13,17,01 * * *'  # Example: 9am, 1pm, 9pm US Eastern during EDT
