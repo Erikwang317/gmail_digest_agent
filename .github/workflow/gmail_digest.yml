@@ -1,0 +1,40 @@
+name: Gmail Digest
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 13,17,01 * * *'  # Example: 9am, 1pm, 9pm US Eastern during EDT
+
+jobs:
+  run-gmail-digest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Recreate Gmail credential files
+        shell: bash
+        run: |
+          printf '%s' "${{ secrets.GMAIL_CLIENT_SECRET_JSON }}" > client_secret.json
+          printf '%s' "${{ secrets.GMAIL_TOKEN_JSON }}" > token.json
+
+      - name: Run Gmail reader
+        run: python gmail_reader.py > output.json
+
+      - name: Show output
+        run: cat output.json
+
+      - name: Upload output artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gmail-digest-output
+          path: output.json
