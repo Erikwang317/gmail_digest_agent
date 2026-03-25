@@ -1,13 +1,23 @@
 import json
 import os
 import subprocess
+import sys
 
 def get_emails():
     result = subprocess.run(
-        ["python", "gmail_reader.py"],
+        [sys.executable, "gmail_reader.py"],
         capture_output=True,
         text=True
     )
+    print("STDOUT:", result.stdout)
+    print("STDERR:", result.stderr)
+
+    if result.returncode != 0:
+        raise RuntimeError(f"gmail_reader.py failed with exit code {result.returncode}")
+
+    if not result.stdout.strip():
+        raise RuntimeError("gmail_reader.py returned empty output")
+
     return json.loads(result.stdout)
 
 def build_message(data):
