@@ -28,7 +28,7 @@ jobs:
         shell: bash
         run: |
           printf '%s' "${{ secrets.CLIENT_SECRET }}" > client_secret.json
-          printf '%s' "${{ secrets.TOKEN_JSON }}" > token.json
+          printf '%s' "${{ secrets.TOKEN }}" > token.json
 
       - name: Validate credential files
         shell: bash
