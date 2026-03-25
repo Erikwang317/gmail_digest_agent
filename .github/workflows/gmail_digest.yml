@@ -27,20 +27,20 @@ jobs:
       - name: Recreate Gmail credential files
         shell: bash
         run: |
-          printf '%s' "${{ secrets.CLIENT_SECRET }}" > client_secret.json
-          printf '%s' "${{ secrets.TOKEN }}" > token.json
+          echo "${{ secrets.CLIENT_SECRET_B64 }}" | base64 --decode > client_secret.json
+          echo "${{ secrets.TOKEN_B64 }}" | base64 --decode > token.json
 
       - name: Validate credential files
         shell: bash
         run: |
           ls -l client_secret.json token.json
-          python - <<'PY'
+          python3 - <<'PY'
           import json
 
           for f in ["client_secret.json", "token.json"]:
               print(f"Checking {f}...")
               with open(f, "r", encoding="utf-8") as fh:
-                  data = json.load(fh)
+                  json.load(fh)
               print(f"{f} is valid JSON")
           PY
 
