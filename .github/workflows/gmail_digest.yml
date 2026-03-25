@@ -30,6 +30,20 @@ jobs:
           printf '%s' "${{ secrets.GMAIL_CLIENT_SECRET_JSON }}" > client_secret.json
           printf '%s' "${{ secrets.GMAIL_TOKEN_JSON }}" > token.json
 
+      - name: Validate credential files
+        shell: bash
+        run: |
+          ls -l client_secret.json token.json
+          python - <<'PY'
+          import json
+
+          for f in ["client_secret.json", "token.json"]:
+              print(f"Checking {f}...")
+              with open(f, "r", encoding="utf-8") as fh:
+                  data = json.load(fh)
+              print(f"{f} is valid JSON")
+          PY
+
       - name: Run digest and send Telegram
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
