@@ -2,10 +2,11 @@ name: Gmail Digest
 
 on:
   push:
-    branches: main
+    branches:
+      - main
   workflow_dispatch:
   schedule:
-    - cron: '17 13,17,01 * * *'  # Example: 9am, 1pm, 9pm US Eastern during EDT
+    - cron: '17 13,17,01 * * *'
 
 jobs:
   run-gmail-digest:
@@ -29,14 +30,8 @@ jobs:
           printf '%s' "${{ secrets.GMAIL_CLIENT_SECRET_JSON }}" > client_secret.json
           printf '%s' "${{ secrets.GMAIL_TOKEN_JSON }}" > token.json
 
-      - name: Run Gmail reader
-        run: python gmail_reader.py > output.json
-
-      - name: Show output
-        run: cat output.json
-
-      - name: Upload output artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: gmail-digest-output
-          path: output.json
+      - name: Run digest and send Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python process_inbox.py

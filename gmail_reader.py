@@ -116,8 +116,9 @@ def get_unread_emails():
 
 
 if __name__ == "__main__":
+    import json
     emails = get_unread_emails()
-
-    print("\n=== EMAIL RESULTS ===")
-    for e in emails:
-        print(e)
+    print(json.dumps({
+        "count": len(emails),
+        "emails": emails
+    }, ensure_ascii=False))
