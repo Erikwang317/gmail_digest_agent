@@ -27,8 +27,8 @@ jobs:
       - name: Recreate Gmail credential files
         shell: bash
         run: |
-          echo "${{ secrets.CLIENT_SECRET_B64 }}" | base64 --decode > client_secret.json
-          echo "${{ secrets.TOKEN_B64 }}" | base64 --decode > token.json
+          echo "${{ secrets.CLIENT_SECRET }}" | base64 --decode > client_secret.json
+          echo "${{ secrets.TOKEN }}" | base64 --decode > token.json
 
       - name: Validate credential files
         shell: bash
