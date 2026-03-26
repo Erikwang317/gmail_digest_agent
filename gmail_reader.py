@@ -1,54 +1,37 @@
 import os
 import logging
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
+from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+SERVICE_ACCOUNT_FILE = 'digest_gmail_account_key.json'  # Ensure this path matches the GitHub Actions secret location
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(message)s"
 )
 
-
 def get_service():
     logging.info("Starting Gmail authentication flow")
     creds = None
 
-    if os.path.exists("token.json"):
-        logging.info("Found existing token.json, loading saved credentials")
-        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-    else:
-        logging.info("No token.json found")
-
-    if not creds or not creds.valid:
-        logging.info("Credentials missing or invalid, starting OAuth login")
-        flow = InstalledAppFlow.from_client_secrets_file(
-            "client_secret.json",
-            SCOPES
-        )
-        creds = flow.run_local_server(port=0)
-
-        logging.info("OAuth completed, saving token.json")
-        with open("token.json", "w") as token:
-            token.write(creds.to_json())
-    else:
-        logging.info("Using existing valid credentials")
+    # Authenticate using the service account key file
+    creds = service_account.Credentials.from_service_account_file(
+        SERVICE_ACCOUNT_FILE, scopes=SCOPES
+    )
+    logging.info("Using service account for authentication")
 
     logging.info("Building Gmail API service client")
     service = build("gmail", "v1", credentials=creds)
     logging.info("Gmail API service client created successfully")
     return service
 
-
 def extract_header(headers, header_name):
     return next(
         (h["value"] for h in headers if h["name"].lower() == header_name.lower()),
         ""
     )
-
 
 def get_unread_emails():
     try:
@@ -113,7 +96,6 @@ def get_unread_emails():
     except Exception:
         logging.exception("Unexpected error while reading emails")
         raise
-
 
 if __name__ == "__main__":
     import json

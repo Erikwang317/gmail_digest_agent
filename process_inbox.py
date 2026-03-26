@@ -2,10 +2,13 @@ import json
 import os
 import subprocess
 import sys
+import requests
 from dotenv import load_dotenv
-import os
 
+# Ensure that environment variables are loaded
 load_dotenv()
+
+# Retrieve Telegram Bot Token and Chat ID from environment variables
 telegram_token = os.getenv("TELEGRAM_BOT_TOKEN")
 chat_id = os.getenv("TELEGRAM_CHAT_ID")
 
@@ -50,8 +53,6 @@ def send_telegram(message):
     token = os.environ["TELEGRAM_BOT_TOKEN"]
     chat_id = os.environ["TELEGRAM_CHAT_ID"]
 
-    import requests
-
     url = f"https://api.telegram.org/bot{token}/sendMessage"
 
     requests.post(url, data={
@@ -60,6 +61,10 @@ def send_telegram(message):
     })
 
 if __name__ == "__main__":
+    # Write service account JSON from GitHub secret to a file
+    with open("service_account.json", "w") as f:
+        f.write(os.getenv("GMAIL_SERVICE_ACCOUNT_JSON"))
+
     data = get_emails()
     msg = build_message(data)
     send_telegram(msg)

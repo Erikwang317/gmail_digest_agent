@@ -6,7 +6,7 @@ on:
       - main
   workflow_dispatch:
   schedule:
-    - cron: '17 13,17,01 * * *'
+    - cron: '17 13,17,01 * * *'  # Example: 9am, 1pm, 9pm US Eastern during EDT
 
 jobs:
   run-gmail-digest:
@@ -27,25 +27,13 @@ jobs:
       - name: Recreate Gmail credential files
         shell: bash
         run: |
-          echo "${{ secrets.CLIENT_SECRET }}" | base64 --decode > client_secret.json
-          echo "${{ secrets.TOKEN }}" | base64 --decode > token.json
+          echo "${{ secrets.GMAIL_SERVICE_ACCOUNT_JSON }}" > service_account.json
+          printf '%s' "${{ secrets.GMAIL_CLIENT_SECRET_JSON }}" > client_secret.json
+          printf '%s' "${{ secrets.GMAIL_TOKEN_JSON }}" > token.json
 
-      - name: Validate credential files
-        shell: bash
-        run: |
-          ls -l client_secret.json token.json
-          python3 - <<'PY'
-          import json
-
-          for f in ["client_secret.json", "token.json"]:
-              print(f"Checking {f}...")
-              with open(f, "r", encoding="utf-8") as fh:
-                  json.load(fh)
-              print(f"{f} is valid JSON")
-          PY
-
-      - name: Run digest and send Telegram
+      - name: Run Gmail reader and send Telegram notification
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python process_inbox.py
+        run: |
+          python process_inbox.py
