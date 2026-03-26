@@ -27,9 +27,9 @@ jobs:
       - name: Recreate Gmail credential files
         shell: bash
         run: |
-          echo "${{ secrets.GMAIL_SERVICE_ACCOUNT_JSON }}" > service_account.json
-          printf '%s' "${{ secrets.GMAIL_CLIENT_SECRET_JSON }}" > client_secret.json
-          printf '%s' "${{ secrets.GMAIL_TOKEN_JSON }}" > token.json
+          echo "${{ secrets.DIGEST_GMAIL_ACCOUNT_KEY}}" > service_account.json
+          printf '%s' "${{ secrets.CLIENT_SECRET }}" > client_secret.json
+          printf '%s' "${{ secrets.TOKEN }}" > token.json
 
       - name: Run Gmail reader and send Telegram notification
         env:
