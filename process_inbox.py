@@ -63,7 +63,7 @@ def send_telegram(message):
 if __name__ == "__main__":
     # Write service account JSON from GitHub secret to a file
     with open("service_account.json", "w") as f:
-        f.write(os.getenv("GMAIL_SERVICE_ACCOUNT_JSON"))
+        f.write(os.getenv("DIGEST_GMAIL_ACCOUNT_KEY"))
 
     data = get_emails()
     msg = build_message(data)
