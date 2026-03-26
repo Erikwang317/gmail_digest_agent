@@ -2,6 +2,12 @@ import json
 import os
 import subprocess
 import sys
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+telegram_token = os.getenv("TELEGRAM_BOT_TOKEN")
+chat_id = os.getenv("TELEGRAM_CHAT_ID")
 
 def get_emails():
     result = subprocess.run(
@@ -18,7 +24,10 @@ def get_emails():
     if not result.stdout.strip():
         raise RuntimeError("gmail_reader.py returned empty output")
 
-    return json.loads(result.stdout)
+    try:
+        return json.loads(result.stdout)
+    except json.JSONDecodeError:
+        raise RuntimeError("Failed to parse JSON from the output of gmail_reader.py")
 
 def build_message(data):
     emails = data.get("emails", [])
