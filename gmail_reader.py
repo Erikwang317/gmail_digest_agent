@@ -1,6 +1,5 @@
 import os
 import base64
-import json
 import logging
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -15,11 +14,6 @@ SCOPES = [
 CLIENT_SECRET_FILE = os.getenv("CLIENT_SECRET_FILE", "client_secret.json")
 TOKEN_FILE = os.getenv("TOKEN_FILE", "token.json")
 DIGEST_LABEL = "Digested"
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(message)s",
-)
 
 
 def get_service():

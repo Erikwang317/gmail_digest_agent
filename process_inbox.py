@@ -1,13 +1,9 @@
-import json
 import logging
 import os
 import sys
 import requests
-from dotenv import load_dotenv
 from gmail_reader import get_unread_emails, apply_digest_label
 from email_analyzer import analyze_emails
-
-load_dotenv()
 
 logging.basicConfig(
     level=logging.INFO,

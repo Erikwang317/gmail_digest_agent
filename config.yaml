@@ -36,6 +36,12 @@ skip_senders:
   - "newsletter@"
   - "digest@"
   - "no-reply@accounts.google.com"
+  - "googleaistudio-noreply@google.com"
+  - "@mp1.tripadvisor.com"
+  - "noreply@robinhood.com"
+  - "RecruitingNoReply@ford.com"
+  - "noreply@linkedin.com"
+  - "notifications@github.com"
 
 skip_keywords:
   - "unsubscribe from this list"
@@ -44,9 +50,11 @@ skip_keywords:
   - "new follower"
   - "trending on"
   - "recommended for you"
+  - "new job opportunities"
+  - "welcome to"
+  - "start making safe and secure"
 
 skip_labels:
   - "CATEGORY_PROMOTIONS"
   - "CATEGORY_SOCIAL"
   - "CATEGORY_FORUMS"
-  - "CATEGORY_UPDATES"

@@ -4,11 +4,6 @@ import os
 import yaml
 import google.generativeai as genai
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(message)s",
-)
-
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.yaml")
 
 
@@ -101,8 +96,10 @@ For each email, determine:
 
 Rules:
 - Any email marked "hard_urgent": true MUST be classified as "urgent" and "important": true.
-- Newsletters, automated notifications, social media alerts, and marketing should be "important": false.
-- When in doubt, lean toward including it (important: true).
+- Newsletters, automated notifications, social media alerts, marketing, welcome emails, and job alerts should be "important": false.
+- Payment confirmations (already paid, no action needed) should be "important": false.
+- Only mark "important": true if the email requires a response, has a deadline, or contains critical information the user would regret missing.
+- When in doubt, lean toward excluding it (important: false).
 
 Return ONLY a valid JSON array, no markdown fences, no explanation. Each object must have: id, urgency, summary, action, important.
 
