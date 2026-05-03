@@ -1,8 +1,10 @@
 import json
 import logging
 import os
+import time
 import yaml
 from google import genai
+from google.genai.errors import ClientError
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.yaml")
 
@@ -106,7 +108,19 @@ Emails to analyze:
 {json.dumps(email_entries, ensure_ascii=False)}"""
 
     logging.info("Sending %d emails to Gemini for analysis", len(email_entries))
-    response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
+
+    for attempt in range(3):
+        try:
+            response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
+            break
+        except ClientError as e:
+            if e.code == 429 and attempt < 2:
+                wait = 60 * (attempt + 1)
+                logging.warning("Rate limited, retrying in %ds (attempt %d/3)", wait, attempt + 1)
+                time.sleep(wait)
+            else:
+                raise
+
     raw = response.text.strip()
 
     if raw.startswith("```"):
