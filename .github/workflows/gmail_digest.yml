@@ -12,8 +12,9 @@ on:
           - digest
           - weekly-review
   schedule:
-    # 9am and 7pm US Eastern (EDT: UTC-4)
+    # 9am, 1pm, and 7pm US Eastern (EDT: UTC-4)
     - cron: '0 13 * * *'
+    - cron: '0 17 * * *'
     - cron: '0 23 * * *'
     # Weekly review: Sunday 10am Eastern
     - cron: '0 14 * * 0'

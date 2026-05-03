@@ -1,6 +1,8 @@
 ## Gmail Digest Agent - Importance Rules
 ## Emails matching these rules are auto-classified before hitting the LLM.
 
+## --- ALWAYS IMPORTANT ---
+## Emails from these senders are always flagged as urgent.
 urgent_senders:
   - "@irs.gov"
   - "@uscis.gov"
@@ -10,6 +12,7 @@ urgent_senders:
   - "@courts.gov"
   - "@dmv"
 
+## Emails containing these keywords are always flagged as urgent.
 urgent_keywords:
   - "payment due"
   - "payment overdue"
@@ -30,6 +33,9 @@ urgent_keywords:
   - "eviction"
   - "insurance claim"
 
+## --- BLOCKLIST ---
+## Emails from these senders are always skipped (never shown in digest).
+## Add junk senders here as you find them in the weekly review.
 skip_senders:
   - "noreply@medium.com"
   - "noreply@quora.com"
@@ -43,6 +49,7 @@ skip_senders:
   - "noreply@linkedin.com"
   - "notifications@github.com"
 
+## Emails containing these keywords are always skipped.
 skip_keywords:
   - "unsubscribe from this list"
   - "weekly digest"
@@ -54,6 +61,7 @@ skip_keywords:
   - "welcome to"
   - "start making safe and secure"
 
+## Gmail category labels to skip entirely.
 skip_labels:
   - "CATEGORY_PROMOTIONS"
   - "CATEGORY_SOCIAL"
