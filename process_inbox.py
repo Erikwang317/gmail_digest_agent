@@ -74,21 +74,26 @@ def send_telegram(message):
     logging.info("Telegram message sent (%d chars, %d chunks)", len(message), len(chunks))
 
 
-def write_service_account_file():
-    key_json = os.getenv("DIGEST_GMAIL_ACCOUNT_KEY")
-    if key_json:
-        with open("service_account.json", "w") as f:
-            f.write(key_json)
-        logging.info("Wrote service_account.json from environment")
+def write_credential_files():
+    client_secret = os.getenv("CLIENT_SECRET")
+    if client_secret:
+        with open("client_secret.json", "w") as f:
+            f.write(client_secret)
+        logging.info("Wrote client_secret.json from environment")
+    token = os.getenv("GMAIL_TOKEN")
+    if token:
+        with open("token.json", "w") as f:
+            f.write(token)
+        logging.info("Wrote token.json from environment")
 
 
 def main():
     logging.info("=== Gmail Digest Agent starting ===")
 
     try:
-        write_service_account_file()
+        write_credential_files()
     except Exception:
-        logging.exception("Failed to write service account file")
+        logging.exception("Failed to write credential files")
         sys.exit(1)
 
     try:
