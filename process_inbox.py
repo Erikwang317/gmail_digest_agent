@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 import requests
-from gmail_reader import get_unread_emails, apply_digest_label
+from gmail_reader import get_unread_emails, apply_digest_label, apply_skipped_label
 from email_analyzer import analyze_emails
 
 logging.basicConfig(
@@ -106,10 +106,9 @@ def main():
         return
 
     try:
-        analysis = analyze_emails(emails)
+        analysis, skipped_ids = analyze_emails(emails)
     except Exception:
         logging.exception("Failed to analyze emails with Gemini")
-        # Fallback: send raw subject list so user isn't left with nothing
         fallback = "⚠️ Gemini analysis failed. Raw unread emails:\n\n"
         for e in emails[:15]:
             fallback += f"• {e['subject']}\n  From: {e['from']}\n\n"
@@ -127,13 +126,19 @@ def main():
         logging.exception("Failed to send digest notification")
         sys.exit(1)
 
-    # Label processed emails so they don't appear in the next run
-    processed_ids = [r["id"] for r in analysis]
+    important_ids = [r["id"] for r in analysis]
+    all_ids = important_ids + skipped_ids
     try:
-        apply_digest_label(service, processed_ids)
-        logging.info("Labeled %d emails as Digested", len(processed_ids))
+        apply_digest_label(service, all_ids)
+        logging.info("Labeled %d emails as Digested", len(all_ids))
     except Exception:
         logging.exception("Failed to apply Digested label (non-fatal)")
+
+    try:
+        apply_skipped_label(service, skipped_ids)
+        logging.info("Labeled %d emails as Digest-Skipped", len(skipped_ids))
+    except Exception:
+        logging.exception("Failed to apply Digest-Skipped label (non-fatal)")
 
     logging.info("=== Gmail Digest Agent finished ===")
 

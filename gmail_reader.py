@@ -14,6 +14,7 @@ SCOPES = [
 CLIENT_SECRET_FILE = os.getenv("CLIENT_SECRET_FILE", "client_secret.json")
 TOKEN_FILE = os.getenv("TOKEN_FILE", "token.json")
 DIGEST_LABEL = "Digested"
+SKIPPED_LABEL = "Digest-Skipped"
 
 
 def get_service():
@@ -84,6 +85,67 @@ def apply_digest_label(service, message_ids):
             ).execute()
         except HttpError:
             logging.exception("Failed to label message %s", msg_id)
+
+
+def apply_skipped_label(service, message_ids):
+    if not message_ids:
+        return
+    label_id = _ensure_label(service, SKIPPED_LABEL)
+    for msg_id in message_ids:
+        try:
+            service.users().messages().modify(
+                userId="me",
+                id=msg_id,
+                body={"addLabelIds": [label_id]},
+            ).execute()
+        except HttpError:
+            logging.exception("Failed to label message %s as skipped", msg_id)
+
+
+def get_skipped_emails(service):
+    """Fetch all emails labeled Digest-Skipped (for weekly review)."""
+    label_id = _ensure_label(service, SKIPPED_LABEL)
+    all_messages = []
+    page_token = None
+
+    while True:
+        results = service.users().messages().list(
+            userId="me", labelIds=[label_id], maxResults=100, pageToken=page_token
+        ).execute()
+        all_messages.extend(results.get("messages", []))
+        page_token = results.get("nextPageToken")
+        if not page_token:
+            break
+
+    emails = []
+    for msg in all_messages:
+        msg_data = service.users().messages().get(
+            userId="me", id=msg["id"], format="metadata"
+        ).execute()
+        headers = msg_data.get("payload", {}).get("headers", [])
+        emails.append({
+            "id": msg_data["id"],
+            "from": extract_header(headers, "From"),
+            "subject": extract_header(headers, "Subject"),
+            "date": extract_header(headers, "Date"),
+        })
+
+    return emails
+
+
+def clear_skipped_label(service, message_ids):
+    if not message_ids:
+        return
+    label_id = _ensure_label(service, SKIPPED_LABEL)
+    for msg_id in message_ids:
+        try:
+            service.users().messages().modify(
+                userId="me",
+                id=msg_id,
+                body={"removeLabelIds": [label_id]},
+            ).execute()
+        except HttpError:
+            logging.exception("Failed to remove skipped label from %s", msg_id)
 
 
 def get_unread_emails(include_body=False):

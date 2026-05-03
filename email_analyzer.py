@@ -126,20 +126,29 @@ Emails to analyze:
 
 
 def analyze_emails(emails):
-    """Full pipeline: config pre-filter → hard-flag urgent → Gemini analysis."""
+    """Full pipeline: config pre-filter → hard-flag urgent → Gemini analysis.
+
+    Returns (important_results, skipped_ids) where skipped_ids includes
+    both config-skipped and Gemini-marked-not-important email IDs.
+    """
     config = load_config()
     to_analyze, skipped = pre_filter(emails, config)
 
+    skipped_ids = [e["id"] for e in skipped]
+
     if not to_analyze:
         logging.info("No emails to analyze after filtering")
-        return []
+        return [], skipped_ids
 
     hard_urgent_ids = hard_flag_urgent(to_analyze, config)
     results = analyze_with_gemini(to_analyze, hard_urgent_ids)
 
     important_results = [r for r in results if r.get("important", True)]
+    not_important = [r for r in results if not r.get("important", True)]
+    skipped_ids.extend(r["id"] for r in not_important)
+
     logging.info(
-        "Final: %d important out of %d analyzed (%d skipped by config)",
-        len(important_results), len(to_analyze), len(skipped),
+        "Final: %d important, %d skipped (%d config + %d Gemini)",
+        len(important_results), len(skipped_ids), len(skipped), len(not_important),
     )
-    return important_results
+    return important_results, skipped_ids

@@ -2,15 +2,27 @@ name: Gmail Digest
 
 on:
   workflow_dispatch:
+    inputs:
+      job:
+        description: 'Which job to run'
+        required: false
+        default: 'digest'
+        type: choice
+        options:
+          - digest
+          - weekly-review
   schedule:
     # 9am and 7pm US Eastern (EDT: UTC-4)
     - cron: '0 13 * * *'
     - cron: '0 23 * * *'
+    # Weekly review: Sunday 10am Eastern
+    - cron: '0 14 * * 0'
 
 jobs:
   run-gmail-digest:
+    if: >-
+      github.event_name != 'schedule' || github.event.schedule != '0 14 * * 0'
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out repo
         uses: actions/checkout@v4
@@ -24,9 +36,34 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run Gmail Digest Agent
+        if: github.event.inputs.job != 'weekly-review'
         env:
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
           GMAIL_TOKEN: ${{ secrets.GMAIL_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: python process_inbox.py
+
+  weekly-review:
+    if: >-
+      (github.event_name == 'schedule' && github.event.schedule == '0 14 * * 0')
+      || (github.event_name == 'workflow_dispatch' && github.event.inputs.job == 'weekly-review')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Weekly Review
+        env:
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          GMAIL_TOKEN: ${{ secrets.GMAIL_TOKEN }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python weekly_review.py
