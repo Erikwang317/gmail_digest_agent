@@ -1,0 +1,52 @@
+## Gmail Digest Agent - Importance Rules
+## Emails matching these rules are auto-classified before hitting the LLM.
+
+urgent_senders:
+  - "@irs.gov"
+  - "@uscis.gov"
+  - "@state.gov"
+  - "@dhs.gov"
+  - "@ssa.gov"
+  - "@courts.gov"
+  - "@dmv"
+
+urgent_keywords:
+  - "payment due"
+  - "payment overdue"
+  - "past due"
+  - "final notice"
+  - "action required"
+  - "immediate action"
+  - "interview scheduled"
+  - "interview invitation"
+  - "offer letter"
+  - "account suspended"
+  - "verify your identity"
+  - "court date"
+  - "jury duty"
+  - "tax return"
+  - "deadline"
+  - "expiring soon"
+  - "eviction"
+  - "insurance claim"
+
+skip_senders:
+  - "noreply@medium.com"
+  - "noreply@quora.com"
+  - "newsletter@"
+  - "digest@"
+  - "no-reply@accounts.google.com"
+
+skip_keywords:
+  - "unsubscribe from this list"
+  - "weekly digest"
+  - "daily digest"
+  - "new follower"
+  - "trending on"
+  - "recommended for you"
+
+skip_labels:
+  - "CATEGORY_PROMOTIONS"
+  - "CATEGORY_SOCIAL"
+  - "CATEGORY_FORUMS"
+  - "CATEGORY_UPDATES"

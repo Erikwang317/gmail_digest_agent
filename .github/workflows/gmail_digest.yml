@@ -1,12 +1,11 @@
 name: Gmail Digest
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
   schedule:
-    - cron: '17 13,17,01 * * *'  # Example: 9am, 1pm, 9pm US Eastern during EDT
+    # 9am and 7pm US Eastern (EDT: UTC-4)
+    - cron: '0 13 * * *'
+    - cron: '0 23 * * *'
 
 jobs:
   run-gmail-digest:
@@ -24,16 +23,14 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Recreate Gmail credential files
+      - name: Write Gmail credentials
         shell: bash
         run: |
-          echo "${{ secrets.DIGEST_GMAIL_ACCOUNT_KEY}}" > service_account.json
-          printf '%s' "${{ secrets.CLIENT_SECRET }}" > client_secret.json
-          printf '%s' "${{ secrets.TOKEN }}" > token.json
+          echo '${{ secrets.DIGEST_GMAIL_ACCOUNT_KEY }}' > service_account.json
 
-      - name: Run Gmail reader and send Telegram notification
+      - name: Run Gmail Digest Agent
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          python process_inbox.py
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python process_inbox.py

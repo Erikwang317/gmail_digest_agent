@@ -1,8 +1,8 @@
 client_secret.json
 token.json
+service_account.json
+digest_gmail_account_key.json
 .venv/
-__pycache__/   
+__pycache__/
 .env
 .DS_Store
-digest 
-digest_gmail_account_key.json
