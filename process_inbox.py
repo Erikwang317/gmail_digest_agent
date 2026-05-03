@@ -50,24 +50,22 @@ def build_message(analysis_results, total_fetched):
     return "\n".join(lines)
 
 
-def send_telegram(message):
-    token = os.environ.get("TELEGRAM_BOT_TOKEN")
-    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
-    if not token or not chat_id:
-        raise RuntimeError("TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set")
+def send_notification(message):
+    topic = os.environ.get("NTFY_TOPIC")
+    if not topic:
+        raise RuntimeError("NTFY_TOPIC not set")
 
-    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    resp = requests.post(
+        f"https://ntfy.sh/{topic}",
+        data=message.encode("utf-8"),
+        headers={"Title": "Gmail Digest"},
+        timeout=30,
+    )
+    if not resp.ok:
+        logging.error("ntfy error %d: %s", resp.status_code, resp.text)
+        raise RuntimeError(f"ntfy send failed: {resp.status_code}")
 
-    # Telegram has a 4096-char limit per message
-    chunks = [message[i:i + 4000] for i in range(0, len(message), 4000)]
-
-    for chunk in chunks:
-        resp = requests.post(url, data={"chat_id": chat_id, "text": chunk}, timeout=30)
-        if not resp.ok:
-            logging.error("Telegram API error %d: %s", resp.status_code, resp.text)
-            raise RuntimeError(f"Telegram send failed: {resp.status_code}")
-
-    logging.info("Telegram message sent (%d chars, %d chunks)", len(message), len(chunks))
+    logging.info("Notification sent via ntfy (%d chars)", len(message))
 
 
 def write_credential_files():
@@ -102,9 +100,9 @@ def main():
 
     if not emails:
         try:
-            send_telegram("📭 No unread emails in the last 24 hours.")
+            send_notification("📭 No unread emails in the last 24 hours.")
         except Exception:
-            logging.exception("Failed to send empty-inbox Telegram message")
+            logging.exception("Failed to send empty-inbox notification")
         return
 
     try:
@@ -116,17 +114,17 @@ def main():
         for e in emails[:15]:
             fallback += f"• {e['subject']}\n  From: {e['from']}\n\n"
         try:
-            send_telegram(fallback)
+            send_notification(fallback)
         except Exception:
-            logging.exception("Failed to send fallback Telegram message")
+            logging.exception("Failed to send fallback notification")
         sys.exit(1)
 
     msg = build_message(analysis, total_fetched=len(emails))
 
     try:
-        send_telegram(msg)
+        send_notification(msg)
     except Exception:
-        logging.exception("Failed to send digest via Telegram")
+        logging.exception("Failed to send digest notification")
         sys.exit(1)
 
     # Label processed emails so they don't appear in the next run
