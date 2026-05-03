@@ -2,7 +2,7 @@ import json
 import logging
 import os
 import yaml
-import google.generativeai as genai
+from google import genai
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.yaml")
 
@@ -71,8 +71,7 @@ def analyze_with_gemini(emails, hard_urgent_ids):
     if not api_key:
         raise RuntimeError("GEMINI_API_KEY environment variable is not set")
 
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    client = genai.Client(api_key=api_key)
 
     email_entries = []
     for e in emails:
@@ -107,7 +106,7 @@ Emails to analyze:
 {json.dumps(email_entries, ensure_ascii=False)}"""
 
     logging.info("Sending %d emails to Gemini for analysis", len(email_entries))
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
     raw = response.text.strip()
 
     if raw.startswith("```"):
