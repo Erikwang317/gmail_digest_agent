@@ -183,8 +183,8 @@ def get_unread_emails(include_body=False):
             body_text = ""
             if include_body:
                 body_text = _get_body_text(payload)
-                if len(body_text) > 3000:
-                    body_text = body_text[:3000]
+                if len(body_text) > 500:
+                    body_text = body_text[:500]
 
             email_item = {
                 "id": msg_data.get("id", ""),

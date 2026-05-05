@@ -67,27 +67,13 @@ def hard_flag_urgent(emails, config):
     return urgent_ids
 
 
-def analyze_with_gemini(emails, hard_urgent_ids):
-    """Use Gemini Flash to classify importance and summarize each email."""
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        raise RuntimeError("GEMINI_API_KEY environment variable is not set")
+BATCH_SIZE = 5
+BATCH_DELAY_SECONDS = 30
+MAX_CHARS_PER_EMAIL = 500
 
-    client = genai.Client(api_key=api_key)
 
-    email_entries = []
-    for e in emails:
-        entry = {
-            "id": e["id"],
-            "from": e["from"],
-            "subject": e["subject"],
-            "snippet": e["snippet"],
-            "body_preview": e.get("body", "")[:1500] if e.get("body") else "",
-            "hard_urgent": e["id"] in hard_urgent_ids,
-        }
-        email_entries.append(entry)
-
-    prompt = f"""You are an email triage assistant. Analyze each email and return a JSON array.
+def _build_prompt(email_entries):
+    return f"""You are an email triage assistant. Analyze each email and return a JSON array.
 
 For each email, determine:
 1. **urgency**: "urgent" (payments due, government, interviews, deadlines, account issues) or "fyi" (informational, can wait)
@@ -107,8 +93,8 @@ Return ONLY a valid JSON array, no markdown fences, no explanation. Each object 
 Emails to analyze:
 {json.dumps(email_entries, ensure_ascii=False)}"""
 
-    logging.info("Sending %d emails to Gemini for analysis", len(email_entries))
 
+def _call_gemini(client, prompt):
     for attempt in range(3):
         try:
             response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
@@ -135,8 +121,47 @@ Emails to analyze:
         logging.error("Failed to parse Gemini response: %s", raw[:500])
         raise RuntimeError("Gemini returned invalid JSON")
 
-    logging.info("Gemini analysis complete: %d results", len(results))
     return results
+
+
+def analyze_with_gemini(emails, hard_urgent_ids):
+    """Use Gemini Flash to classify importance and summarize each email."""
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        raise RuntimeError("GEMINI_API_KEY environment variable is not set")
+
+    client = genai.Client(api_key=api_key)
+
+    email_entries = []
+    for e in emails:
+        combined_text = f"{e['subject']} {e['snippet']} {e.get('body', '') or ''}"
+        if len(combined_text) > MAX_CHARS_PER_EMAIL:
+            combined_text = combined_text[:MAX_CHARS_PER_EMAIL]
+
+        entry = {
+            "id": e["id"],
+            "from": e["from"],
+            "text": combined_text,
+            "hard_urgent": e["id"] in hard_urgent_ids,
+        }
+        email_entries.append(entry)
+
+    all_results = []
+    batches = [email_entries[i:i + BATCH_SIZE] for i in range(0, len(email_entries), BATCH_SIZE)]
+    logging.info("Sending %d emails to Gemini in %d batches of %d", len(email_entries), len(batches), BATCH_SIZE)
+
+    for batch_idx, batch in enumerate(batches):
+        if batch_idx > 0:
+            logging.info("Waiting %ds before next batch...", BATCH_DELAY_SECONDS)
+            time.sleep(BATCH_DELAY_SECONDS)
+
+        prompt = _build_prompt(batch)
+        logging.info("Sending batch %d/%d (%d emails)", batch_idx + 1, len(batches), len(batch))
+        results = _call_gemini(client, prompt)
+        all_results.extend(results)
+
+    logging.info("Gemini analysis complete: %d results", len(all_results))
+    return all_results
 
 
 def analyze_emails(emails):
