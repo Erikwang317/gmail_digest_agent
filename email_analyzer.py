@@ -97,7 +97,7 @@ Emails to analyze:
 def _call_gemini(client, prompt):
     for attempt in range(3):
         try:
-            response = client.models.generate_content(model="gemini-2.0-flash-lite", contents=prompt)
+            response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=prompt)
             break
         except ClientError as e:
             if e.code == 429 and attempt < 2:
